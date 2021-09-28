@@ -1,11 +1,33 @@
 ﻿using System;
+using System.IO;
 using System.Net.Http;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 
+StreamReader reader = new StreamReader("matchlist.txt");
+StreamWriter writer = new StreamWriter("data.csv");
 
-var list = await GetPlayeMatchStats("ESPORTSTMNT03_2054910");
+int count = 0;
+while (!reader.EndOfStream)
+{
+    string line = reader.ReadLine();
+    try
+    {
+        var list = await GetPlayeMatchStats(line);
+        foreach (var player in list)
+            writer.WriteLine(player.ToString());
+        count++;
+        Console.WriteLine($"Complete #{count}: " + line);
+    }
+    catch
+    {
+        Console.WriteLine("Error in: " + line);
+    }
+}
+
+writer.Close();
+reader.Close();
 
 async Task<List<PlayerMatchStats>> GetPlayeMatchStats(string RiotPlatformGameId)
 {
@@ -39,12 +61,29 @@ async Task<List<PlayerMatchStats>> GetPlayeMatchStats(string RiotPlatformGameId)
         var id = int.Parse(stats[0].Substring(51, stats[0].Length - 51 - 5)) - 1;
 
         PlayerMatchStats pms = new PlayerMatchStats();
+        pms.Match = RiotPlatformGameId;
         pms.Team = names[id].Split(' ')[0];
         pms.Nickname = names[id].Split(' ')[1];
-        
-        for (int i = 2; i < stats.Length; i++)
+
+        var props = typeof(PlayerMatchStats).GetProperties();
+
+        foreach (var prop in props)
         {
-            
+            var att = prop.GetCustomAttribute<PlayerStatus>();
+            if (att != null)
+            {
+                for (int i = 2; i < stats.Length; i++)
+                {
+                    if (stats[i].Contains(">" + att.Key + "<"))
+                    {
+                        var value = stats[i]
+                            .ScopeSearch("<td class=\"value\">", "</td>");
+                        value = value
+                            .Substring(18, value.Length - 18 - 1);
+                        prop.SetValue(pms, int.Parse(value));
+                    }
+                }
+            }
         }
 
         playersstats = playersstats.ScopeSkipSearch("<tr>", "</tr>");
