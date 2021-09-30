@@ -41,7 +41,7 @@ public static class SearchExtesion
             }
             j = 0;
             for (; j < end.Length && txt[i + j] == end[j]; j++);
-            if (j == end.Length)
+            if (j == end.Length && startindex != -1)
             {
                 if (level == 0)
                 {

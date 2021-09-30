@@ -4,10 +4,9 @@ using System.Reflection;
 class PlayerMatchStats
 {
     public string Nickname { get; set; }
-
     public string Match { get; set; }
-
     public string Team { get; set; }
+    public int Duration { get; set; }
 
     [PlayerStatus("kills")]
     public int Kills { get; set; }

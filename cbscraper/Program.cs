@@ -40,6 +40,8 @@ async Task<List<PlayerMatchStats>> GetPlayeMatchStats(string RiotPlatformGameId)
     var table = data
         .ScopeSearch("<table", "</table>")
         .ScopeSkipSearch("<tr>", "</tr>", 11);
+    var duration = data.ScopeSearch("gameDuration", "</td>");
+    duration = duration.Substring(35, duration.Length - 35 - 1);
     var playersstats = table.ScopeSearch("<table", "</table>");
     var idnamekey = table
         .ScopeSkipSearch("<tr>", "</tr>")
@@ -61,6 +63,7 @@ async Task<List<PlayerMatchStats>> GetPlayeMatchStats(string RiotPlatformGameId)
         var id = int.Parse(stats[0].Substring(51, stats[0].Length - 51 - 5)) - 1;
 
         PlayerMatchStats pms = new PlayerMatchStats();
+        pms.Duration = int.Parse(duration);
         pms.Match = RiotPlatformGameId;
         pms.Team = names[id].Split(' ')[0];
         pms.Nickname = names[id].Split(' ')[1];
